@@ -6,6 +6,12 @@ import xmlToJson from 'xml2json';
 
 let globalVar = {
     QRLogin: {
+    },
+    synccheck: {
+    },
+    SyncKey: {
+        Count: 0,
+        List: []
     }
 };
 
@@ -59,4 +65,9 @@ export function setData(data) {
 
 export function getData() {
     return globalVar;
+}
+
+export function getSyncKey() {
+    let list = globalVar.SyncKey.List;
+    return list.map(item => item.Key + '_' + item.Val).join('|');
 }
