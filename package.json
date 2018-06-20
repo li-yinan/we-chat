@@ -1,0 +1,35 @@
+{
+    "name": "we-chat",
+    "version": "0.0.1",
+    "description": "wechat login for node",
+    "main": "index.js",
+    "scripts": {
+        "dev": "babel-node index.js",
+        "prepublish": "npm run build",
+        "test": "babel-node test/index.js",
+        "build": "sh scripts/build.sh"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/li-yinan/we-chat.git"
+    },
+    "keywords": [
+        "wechat"
+    ],
+    "devDependencies": {
+        "babel-cli": "^6.26.0",
+        "babel-preset-env": "^1.6.1"
+    },
+    "author": "li-yinan",
+    "license": "BSD-2-Clause",
+    "bugs": {
+        "url": "https://github.com/li-yinan/we-chat/issues"
+    },
+    "homepage": "https://github.com/li-yinan/we-chat#readme",
+    "dependencies": {
+        "qrcode-terminal": "^0.12.0",
+        "request": "^2.87.0",
+        "request-promise-native": "^1.0.5",
+        "xml2json": "^0.11.2"
+    }
+}
