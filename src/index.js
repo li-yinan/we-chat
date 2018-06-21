@@ -1,6 +1,6 @@
 /**
  * 微信登录，https://github.com/maiff/Itchat/blob/master/doc/%E6%95%99%E7%A8%8B.md
- * 
+ *
  * @author li-yinan
  * @version 1.0
  * @date 2018-06-20
@@ -14,9 +14,11 @@ import {
     xml2json,
     setData,
     getData,
+    getSyncKey,
     exe
 } from './util';
 
+const deviceid = 'e980803117785423';
 const LOGIN_URL = 'https://login.weixin.qq.com/jslogin';
 const REDIRECT_URL = 'https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxnewloginpage';
 const LOGIN_BASE_URL = 'https://login.weixin.qq.com/l/';
@@ -75,14 +77,76 @@ export class WeChat {
             skey,
         } = getData();
         let url = `https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxinit?pass_ticket=${pass_ticket}&skey=${skey}&r=${~Date.now()}`;
-        let res = await post(url, JSON.stringify({ 
-            BaseRequest: { 
-                Uin: wxuin, 
-                Sid: wxsid, 
-                Skey: skey, 
-                DeviceID: 'e890803117785423'
-            } 
+        let res = await post(url, JSON.stringify({
+            BaseRequest: {
+                Uin: wxuin,
+                Sid: wxsid,
+                Skey: skey,
+                DeviceID: deviceid
+            }
         }));
-        console.log(res);
+        setData(res);
+    }
+
+    async syncCheck() {
+        let {
+            wxuin,
+            wxsid,
+            pass_ticket,
+            skey,
+        } = getData();
+        let synckey = getSyncKey();
+        let url = 'https://webpush.wx.qq.com/cgi-bin/mmwebwx-bin/synccheck';
+        let res = await get(url, {
+            r: ~Date.now(),
+            sid: wxsid,
+            uin: wxuin,
+            skey,
+            deviceid,
+            synckey
+        });
+        let {synccheck} = exe(res);
+        if (synccheck.retcode - 0) {
+            console.log(synccheck.retcode);
+            throw 'logout';
+        }
+        if (synccheck.selector - 0) {
+            // new message
+            // 本应该继续用webWxSync拉取消息的
+            // 但是我只需要发消息，这块就先不处理了
+            // 反而是把消息拉取过来会导致手机端消息接收变慢
+            console.log(synccheck.selector);
+        }
+        await this.webWxSync();
+    }
+
+    async webWxSync() {
+        let {
+            wxuin,
+            wxsid,
+            pass_ticket,
+            skey,
+            SyncKey
+        } = getData();
+        let url = `https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxsync?pass_ticket=${pass_ticket}&skey=${skey}&sid=${wxsid}`;
+        let res = await post(url, JSON.stringify({
+            BaseRequest: {
+                Uin: wxuin,
+                Sid: wxsid,
+                Skey: skey,
+                DeviceID: deviceid
+            },
+            SyncKey,
+            rr: ~Date.now()
+        }));
+        setData(res);
+    }
+
+    async start() {
+        await this.login();
+        await this.init();
+        while(true) {
+            await this.syncCheck();
+        }
     }
 }
