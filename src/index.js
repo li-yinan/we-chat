@@ -18,6 +18,8 @@ import {
     exe
 } from './util';
 
+import EventEmitter from 'events';
+
 const deviceid = 'e980803117785423';
 const LOGIN_URL = 'https://login.weixin.qq.com/jslogin';
 const REDIRECT_URL = 'https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxnewloginpage';
@@ -25,7 +27,7 @@ const LOGIN_BASE_URL = 'https://login.weixin.qq.com/l/';
 // const QRCODE_URL = 'https://login.weixin.qq.com/qrcode/';
 const IS_LOGIN_URL = 'https://login.wx.qq.com/cgi-bin/mmwebwx-bin/login';
 
-export class WeChat {
+export class WeChat extends EventEmitter {
     async login() {
         // 获取uuid
         let res = await post(LOGIN_URL, {
@@ -85,7 +87,7 @@ export class WeChat {
                 DeviceID: deviceid
             }
         }));
-        setData(res);
+        setData(JSON.parse(res));
     }
 
     async syncCheck() {
@@ -120,6 +122,32 @@ export class WeChat {
         await this.webWxSync();
     }
 
+    async webWxStatusNotify() {
+        let data = getData();
+        let {
+            wxuin,
+            wxsid,
+            pass_ticket,
+            skey,
+            User,
+            SyncKey
+        } = getData();
+        let userName = User.UserName;
+        let url = `https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxstatusnotify?lang=zh_CN&pass_ticket=${pass_ticket}`;
+        let res = await post(url, JSON.stringify({
+            BaseRequest: {
+                Uin: wxuin,
+                Sid: wxsid,
+                Skey: skey,
+                DeviceID: deviceid
+            },
+            Code: 3,
+            FromUserName: userName,
+            ToUserName: userName,
+            ClientMsgId: ~Date.now()
+        }));
+    }
+
     async webWxSync() {
         let {
             wxuin,
@@ -139,13 +167,80 @@ export class WeChat {
             SyncKey,
             rr: ~Date.now()
         }));
-        setData(res);
+        setData(JSON.parse(res));
+    }
+
+    async getContactList() {
+        let {
+            wxuin,
+            wxsid,
+            pass_ticket,
+            User,
+            skey,
+            SyncKey
+        } = getData();
+        let url = `https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxgetcontact?pass_ticket=${pass_ticket}&skey=${skey}&seq=0&r=${Date.now()}`;
+        let res = await get(url);
+        res = setData(JSON.parse(res));
+        return res.MemberList;
+    }
+
+    getContact(name) {
+        let {
+            MemberList
+        } = getData();
+        return MemberList.find(item => {
+            if (
+                item.NickName === name
+                || item.RemarkName === name
+            ) {
+                return true;
+            }
+        });
+    }
+
+    async sendMessage({to, text}) {
+        let {
+            wxuin,
+            wxsid,
+            pass_ticket,
+            User,
+            skey,
+            SyncKey
+        } = getData();
+        let userName = User.UserName;
+        let LocalID = (Date.now() % 10000) * 10000 + parseInt(Math.random() * 10000, 10);
+        let url = `https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxsendmsg?pass_ticket=${pass_ticket}`;
+        let res = await post(url, JSON.stringify({
+            BaseRequest: {
+                Uin: wxuin,
+                Sid: wxsid,
+                Skey: skey,
+                DeviceID: deviceid
+            },
+            Msg: {
+                Type: 1, // 文字
+                Content: text,
+                FromUserName: userName,
+                ToUserName: to,
+                LocalID,
+                ClientMsgId: LocalID
+            }
+        }));
     }
 
     async start() {
         await this.login();
+        console.log('login ok');
         await this.init();
+        console.log('init ok');
+        await this.getContactList();
+        console.log('get contact list ok');
+        await this.webWxStatusNotify();
+        console.log('ready');
+        this.emit('ready');
         while(true) {
+            console.log('syncing');
             await this.syncCheck();
         }
     }
