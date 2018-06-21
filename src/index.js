@@ -74,7 +74,7 @@ export class WeChat {
             pass_ticket,
             skey,
         } = getData();
-        let url = `https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxinit?pass_ticket=${pass_ticket}&skey=${skey}&r=-396505865`;
+        let url = `https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxinit?pass_ticket=${pass_ticket}&skey=${skey}&r=${~Date.now()}`;
         let res = await post(url, JSON.stringify({ 
             BaseRequest: { 
                 Uin: wxuin, 
