@@ -71,6 +71,8 @@ export class WeChat extends EventEmitter {
         res = xml2json(await get(loginResult.redirect_uri + '&fun=new&version=v2'));
         // 把获取到的各种id存到公共地方
         res = setData(res.error);
+        let baseUrl = loginResult.redirect_uri.match(/(wx.+com)/)[1];
+        setData({baseUrl});
     }
 
     async init() {
@@ -98,15 +100,17 @@ export class WeChat extends EventEmitter {
             wxsid,
             pass_ticket,
             skey,
+            baseUrl
         } = getData();
         let synckey = getSyncKey();
-        let url = 'https://webpush.wx.qq.com/cgi-bin/mmwebwx-bin/synccheck';
+        let url = `https://webpush.${baseUrl}/cgi-bin/mmwebwx-bin/synccheck`;
         let res = await get(url, {
             r: Date.now(),
             sid: wxsid,
             uin: wxuin,
             skey,
             deviceid,
+            _: Date.now(),
             synckey
         });
         let {synccheck} = exe(res);
@@ -134,10 +138,11 @@ export class WeChat extends EventEmitter {
             pass_ticket,
             skey,
             User,
+            baseUrl,
             SyncKey
         } = getData();
         let userName = User.UserName;
-        let url = `https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxstatusnotify?lang=zh_CN&pass_ticket=${pass_ticket}`;
+        let url = `https://${baseUrl}/cgi-bin/mmwebwx-bin/webwxstatusnotify?lang=zh_CN&pass_ticket=${pass_ticket}`;
         let res = await post(url, JSON.stringify({
             BaseRequest: {
                 Uin: wxuin,
@@ -159,9 +164,10 @@ export class WeChat extends EventEmitter {
             wxsid,
             pass_ticket,
             skey,
+            baseUrl,
             SyncKey
         } = getData();
-        let url = `https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxsync?pass_ticket=${pass_ticket}&skey=${skey}&sid=${wxsid}`;
+        let url = `https://${baseUrl}/cgi-bin/mmwebwx-bin/webwxsync?pass_ticket=${pass_ticket}&skey=${skey}&sid=${wxsid}`;
         let res = await post(url, JSON.stringify({
             BaseRequest: {
                 Uin: wxuin,
@@ -182,9 +188,10 @@ export class WeChat extends EventEmitter {
             pass_ticket,
             User,
             skey,
+            baseUrl,
             SyncKey
         } = getData();
-        let url = `https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxgetcontact?pass_ticket=${pass_ticket}&skey=${skey}&seq=0&r=${Date.now()}`;
+        let url = `https://${baseUrl}/cgi-bin/mmwebwx-bin/webwxgetcontact?pass_ticket=${pass_ticket}&skey=${skey}&seq=0&r=${Date.now()}`;
         let res = await get(url);
         res = setData(JSON.parse(res));
         return res.MemberList;
@@ -211,11 +218,12 @@ export class WeChat extends EventEmitter {
             pass_ticket,
             User,
             skey,
+            baseUrl,
             SyncKey
         } = getData();
         let userName = User.UserName;
         let LocalID = (Date.now() % 10000) * 10000 + parseInt(Math.random() * 10000, 10);
-        let url = `https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxsendmsg?pass_ticket=${pass_ticket}`;
+        let url = `https://${baseUrl}/cgi-bin/mmwebwx-bin/webwxsendmsg?pass_ticket=${pass_ticket}`;
         let res = await post(url, JSON.stringify({
             BaseRequest: {
                 Uin: wxuin,

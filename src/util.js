@@ -11,6 +11,7 @@ let globalVarTemplate = {
     },
     synccheck: {
     },
+    baseUrl: 'wx.qq.com',
     MemberList: [],
     setCookies: [],
     User: {
@@ -31,27 +32,24 @@ export async function post(url, params) {
         .post(url)
         .form(params)
         .on('response', function (response) {
-            // console.log('>>>', response.text);
             let headers = response.headers;
             let setCookies = headers['set-cookie'] || [];
             globalVar.setCookies = [...globalVar.setCookies, ...setCookies];
-            setCookies.map(item => request.cookie(item));
+            // setCookies.map(item => request.cookie(item));
         });
     // console.log('post', url, params, res);
     return res;
 }
 
 export async function get(url, params) {
-    console.log('get', url, params);
     let paramStr = new URLSearchParams(params);
     let res = await request
         .get(url + '?' + paramStr)
         .on('response', function (response) {
-            // console.log('>>>', response.text);
             let headers = response.headers;
             let setCookies = headers['set-cookie'] || [];
             globalVar.setCookies = [...globalVar.setCookies, ...setCookies];
-            setCookies.map(item => request.cookie(item));
+            // setCookies.map(item => request.cookie(item));
         });
     // console.log('get', url, params, res);
     return res;
