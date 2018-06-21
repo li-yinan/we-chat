@@ -14,6 +14,8 @@ import {
     xml2json,
     setData,
     getData,
+    clearData,
+    readData,
     getSyncKey,
     exe
 } from './util';
@@ -48,7 +50,7 @@ export class WeChat extends EventEmitter {
         // 循环等待用户扫描登录二维码
         let loginResult = {};
         while(loginResult.code !== 200) {
-            let tip;
+            let tip = 1;
             // 用户未扫描
             if (loginResult.code === 408) {
                 tip = 1;
@@ -78,7 +80,7 @@ export class WeChat extends EventEmitter {
             pass_ticket,
             skey,
         } = getData();
-        let url = `https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxinit?pass_ticket=${pass_ticket}&skey=${skey}&r=${~Date.now()}`;
+        let url = `https://wx.qq.com/cgi-bin/mmwebwx-bin/webwxinit?lang=zh_CN&pass_ticket=${pass_ticket}&skey=${skey}&r=${~Date.now()}`;
         let res = await post(url, JSON.stringify({
             BaseRequest: {
                 Uin: wxuin,
@@ -87,7 +89,7 @@ export class WeChat extends EventEmitter {
                 DeviceID: deviceid
             }
         }));
-        setData(JSON.parse(res));
+        return setData(JSON.parse(res));
     }
 
     async syncCheck() {
@@ -100,7 +102,7 @@ export class WeChat extends EventEmitter {
         let synckey = getSyncKey();
         let url = 'https://webpush.wx.qq.com/cgi-bin/mmwebwx-bin/synccheck';
         let res = await get(url, {
-            r: ~Date.now(),
+            r: Date.now(),
             sid: wxsid,
             uin: wxuin,
             skey,
@@ -110,7 +112,9 @@ export class WeChat extends EventEmitter {
         let {synccheck} = exe(res);
         if (synccheck.retcode - 0) {
             console.log(synccheck.retcode);
+            await clearData();
             throw 'logout';
+            // this.start();
         }
         if (synccheck.selector - 0) {
             // new message
@@ -146,6 +150,7 @@ export class WeChat extends EventEmitter {
             ToUserName: userName,
             ClientMsgId: ~Date.now()
         }));
+        return setData(JSON.parse(res));
     }
 
     async webWxSync() {
@@ -230,12 +235,21 @@ export class WeChat extends EventEmitter {
     }
 
     async start() {
-        await this.login();
-        console.log('login ok');
-        await this.init();
-        console.log('init ok');
-        await this.getContactList();
-        console.log('get contact list ok');
+        await readData();
+        let res = await this.webWxStatusNotify();
+        let needLogin = res.BaseResponse.Ret !== 0;
+        if (needLogin) {
+            await this.login();
+            console.log('login ok');
+            await this.init();
+            console.log('init ok');
+            await this.getContactList();
+            console.log('get contact list ok');
+        }
+        else {
+            await this.init();
+            console.log('init ok');
+        }
         await this.webWxStatusNotify();
         console.log('ready');
         this.emit('ready');
