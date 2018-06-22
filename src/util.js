@@ -128,19 +128,23 @@ export async function writeData() {
 
 export async function readData() {
     return new Promise((resolve, reject) => {
-        fs.readFile(configFilePath, (err, data) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-            try {
-                globalVar = Object.assign({}, globalVar, JSON.parse(data));
-            }
-            catch (e) {
-                clearData();
-            }
-
+        if (fs.existsSync(configFilePath)) {
+            fs.readFile(configFilePath, (err, data) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                try {
+                    globalVar = Object.assign({}, globalVar, JSON.parse(data));
+                }
+                catch (e) {
+                    clearData();
+                }
+                resolve(globalVar);
+            });
+        }
+        else {
             resolve(globalVar);
-        });
+        }
     });
 }
