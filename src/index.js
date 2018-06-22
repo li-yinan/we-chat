@@ -122,10 +122,7 @@ export class WeChat extends EventEmitter {
         }
         if (synccheck.selector - 0) {
             // new message
-            // 本应该继续用webWxSync拉取消息的
-            // 但是我只需要发消息，这块就先不处理了
-            // 反而是把消息拉取过来会导致手机端消息接收变慢
-            console.log(synccheck.selector);
+            console.log('new message');
         }
         await this.webWxSync();
     }
@@ -178,7 +175,18 @@ export class WeChat extends EventEmitter {
             SyncKey,
             rr: ~Date.now()
         }));
-        setData(JSON.parse(res));
+        let data = JSON.parse(res);
+        if (data.AddMsgCount) {
+            data.AddMsgList.map(item => this.handleMessage(item));
+        }
+        setData(data);
+    }
+
+    handleMessage(message) {
+        if (message.MsgType === 1) {
+            // 文字消息
+            this.emit('message', message);
+        }
     }
 
     async getContactList() {

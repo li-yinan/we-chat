@@ -28,6 +28,12 @@ let request = requestpn.defaults({jar: true});
 
 let configFilePath = path.join(__dirname, '../config.json');
 export async function post(url, params) {
+    let setCookies = globalVar.setCookies || [];
+    let j = request.jar();
+    setCookies.map(item => {
+        j.setCookie(request.cookie(item), url);
+    });
+    request = request.defaults({jar:j});
     let res = await request
         .post(url)
         .form(params)
@@ -43,6 +49,12 @@ export async function post(url, params) {
 
 export async function get(url, params) {
     let paramStr = new URLSearchParams(params);
+    let setCookies = globalVar.setCookies || [];
+    let j = request.jar();
+    setCookies.map(item => {
+        j.setCookie(request.cookie(item), url);
+    });
+    request = request.defaults({jar:j});
     let res = await request
         .get(url + '?' + paramStr)
         .on('response', function (response) {
@@ -119,8 +131,7 @@ export async function readData() {
             catch (e) {
                 clearData();
             }
-            let setCookies = globalVar.setCookies || [];
-            setCookies.map(item => request.cookie(item));
+
             resolve(globalVar);
         });
     });
