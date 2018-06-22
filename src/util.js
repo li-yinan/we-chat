@@ -31,7 +31,11 @@ export async function post(url, params) {
     let setCookies = globalVar.setCookies || [];
     let j = request.jar();
     setCookies.map(item => {
-        j.setCookie(request.cookie(item), url);
+        try {
+            j.setCookie(request.cookie(item), url);
+        }
+        catch (e) {
+        }
     });
     request = request.defaults({jar:j});
     let res = await request
@@ -52,7 +56,11 @@ export async function get(url, params) {
     let setCookies = globalVar.setCookies || [];
     let j = request.jar();
     setCookies.map(item => {
-        j.setCookie(request.cookie(item), url);
+        try {
+            j.setCookie(request.cookie(item), url);
+        }
+        catch (e) {
+        }
     });
     request = request.defaults({jar:j});
     let res = await request
