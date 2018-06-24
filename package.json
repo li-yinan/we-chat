@@ -1,7 +1,7 @@
 {
-    "name": "we-chat",
+    "name": "@li-yinan/wechat",
     "version": "0.0.1",
-    "description": "wechat login for node",
+    "description": "wechat for node",
     "main": "index.js",
     "scripts": {
         "dev": "babel-node index.js",

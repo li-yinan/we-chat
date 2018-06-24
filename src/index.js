@@ -230,6 +230,8 @@ export class WeChat extends EventEmitter {
             SyncKey
         } = getData();
         let userName = User.UserName;
+        // 没填就发给文件助手
+        to = to || 'filehelper';
         let LocalID = (Date.now() % 10000) * 10000 + parseInt(Math.random() * 10000, 10);
         let url = `https://${baseUrl}/cgi-bin/mmwebwx-bin/webwxsendmsg?pass_ticket=${pass_ticket}`;
         let res = await post(url, JSON.stringify({
