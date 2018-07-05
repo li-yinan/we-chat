@@ -1,1 +1,1 @@
-export {WeChat} from './lib/index';
+exports.WeChat = require('./lib/index').WeChat;
