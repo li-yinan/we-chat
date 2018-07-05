@@ -273,7 +273,12 @@ export class WeChat extends EventEmitter {
         this.emit('ready');
         while(true) {
             console.log('syncing');
-            await this.syncCheck();
+            try {
+                await this.syncCheck();
+            }
+            catch (e) {
+                console.log(e);
+            }
         }
     }
 }
