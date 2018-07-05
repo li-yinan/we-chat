@@ -1,6 +1,6 @@
 {
     "name": "@li-yinan/wechat",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "description": "wechat for node",
     "main": "index.js",
     "scripts": {
